@@ -1,0 +1,70 @@
+# 依存関係
+node_modules/
+
+# ビルド出力
+dist/
+build/
+*.tsbuildinfo
+
+# テストカバレッジ
+coverage/
+*.lcov
+.nyc_output/
+
+# ログファイル
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# 環境変数ファイル
+.env
+.env.local
+.env.*.local
+
+# OS固有のファイル
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# IDE - VSCode（ユーザー固有の設定）
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# IDE - JetBrains
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# IDE - その他
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# 一時ファイル
+*.tmp
+*.temp
+*.cache
+
+# パッケージマネージャーのロックファイル（オプション）
+# 通常はコミットするが、プロジェクトの方針によっては無視することも
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
