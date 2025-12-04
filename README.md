@@ -124,11 +124,14 @@ type HolidayRule = {
 
 ### バリデーションルール
 
-- `name`と`title`は必須です
+- `name`と`title`, `yearRange`は必須です
+- `yearRange.begin`と`yearRange.end`は1以上9999以下である必要があります
 - `yearRange.begin`は`yearRange.end`以下である必要があります
 - `month`は1から12の範囲である必要があります
 - `date`は1から31の範囲である必要があります
+- `dateRange.begin`と`dateRange.end`は1から31の範囲である必要があります
+- `dateRange.begin`は`dateRange.end`以下である必要があります
+- `date`と`dateRange`は同時に指定できません
 - `date`と`weekday`は同時に指定できません
 - `weekday`は小文字の曜日名（'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'）である必要があります
 - `logic`は指定された値のいずれかである必要があります
-

@@ -339,11 +339,11 @@ class CalendarJp {
         if (!rule.yearRange.end) {
             throw new Error('Rule yearRange.end is required');
         }
-        if (rule.yearRange.begin < 1948) {
-            throw new Error('Rule yearRange.begin must be greater than or equal to 1948');
+        if (rule.yearRange.begin < 1) {
+            throw new Error('Rule yearRange.begin must be greater than or equal to 1');
         }
-        if (rule.yearRange.end > 2099) {
-            throw new Error('Rule yearRange.end must be less than or equal to 2099');
+        if (rule.yearRange.end > 9999) {
+            throw new Error('Rule yearRange.end must be less than or equal to 9999');
         }
         if (rule.yearRange.begin > rule.yearRange.end) {
             throw new Error('Rule yearRange.begin must be less than or equal to yearRange.end');
