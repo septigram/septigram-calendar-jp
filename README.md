@@ -5,7 +5,7 @@
 ## 使い方
 
 ```typescript
-import CalendarJp from 'ts-calendar-jp';
+import CalendarJp from 'septigram-calendar-jp';
 
 // カレンダーインスタンスを作成
 const calendar = new CalendarJp();
