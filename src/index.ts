@@ -1,14 +1,34 @@
 /**
  * 日本の祝日ライブラリ(1948年から2099年までに対応)
  */
-import holidayRuleJp from '../holiday_rule_jp.json' assert { type: 'json' };
+import holidayRuleJp from './holiday_rule_jp';
 
 /**
  * 祝日情報
  */
 type Holiday = {
     date: string;
+    title: string;
+}
+
+/**
+ * 祝日ルール情報
+ */
+type HolidayRule = {
     name: string;
+    title: string;
+    yearRange: {
+        begin: number;
+        end: number;
+    };
+    month?: number;
+    date?: number;
+    dateRange?: {
+        begin: number;
+        end: number;
+    };
+    weekday?: string;
+    logic?: string;
 }
 
 /**
@@ -71,6 +91,46 @@ class CalendarJp {
     }
 
     /**
+     * 祝日ルールを追加する
+     * @param rule 祝日ルール
+     */
+    public addRule(rule: HolidayRule) {
+        this.validateRule(rule);
+        if (this.holidayRuleJp.rules.find(r => r.name === rule.name)) {
+            throw new Error(`Rule ${rule.name} already exists`);
+        }
+        this.holidayRuleJp.rules.push(rule);
+        this.holidayYearMap = {};
+    }
+
+    /**
+     * 祝日ルールを削除する
+     * @param ruleName 祝日ルール名
+     */
+    public removeRule(ruleName: string) {
+        this.holidayRuleJp.rules = this.holidayRuleJp.rules.filter(rule => rule.name !== ruleName);
+        this.holidayYearMap = {};
+    }
+
+    /**
+     * 祝日ルールを更新する
+     * @param rule 祝日ルール
+     */
+    public updateRule(rule: HolidayRule) {
+        this.validateRule(rule);
+        this.holidayRuleJp.rules = this.holidayRuleJp.rules.map(r => r.name === rule.name ? rule : r);
+        this.holidayYearMap = {};
+    }
+
+    /**
+     * 祝日ルールを一覧する
+     * @returns 祝日ルール一覧
+     */
+    public listRules(): HolidayRule[] {
+        return this.holidayRuleJp.rules;
+    }
+
+    /**
      * 日付をyyyy-MM-dd形式の文字列に変換する
      * @param date 
      * @returns yyyy-MM-dd形式の文字列
@@ -96,7 +156,7 @@ class CalendarJp {
         while (d.getFullYear() === year) {
             const month = d.getMonth() + 1;
             const date = d.getDate();
-            let holidayName = null;
+            let holidayTitle = null;
             for (const rule of this.holidayRuleJp.rules) {
                 // 年の範囲外
                 if (year < rule.yearRange.begin || year > rule.yearRange.end) continue;
@@ -104,29 +164,29 @@ class CalendarJp {
                 if (rule.month && rule.month !== month) continue;
                 if (rule.date && rule.date === date) {
                     // 単独の日指定がある場合   
-                    holidayName = rule.name;
+                    holidayTitle = rule.title;
                 } else if (rule.dateRange && rule.dateRange.begin && rule.dateRange.end
                     && rule.dateRange.begin <= date && rule.dateRange.end >= date) {
                     // 日の範囲指定がある場合
                     if (rule.weekday && rule.weekday.toLowerCase() !== this.weekdays[d.getDay()]) continue;
-                    holidayName = rule.name;
+                    holidayTitle = rule.title;
                 } else if (rule.logic) {
                     // ロジックが指定されている場合
                     switch (rule.logic) {
                         case 'Vernal Equinox Day':
                             if (date !== vernalEquinoxDate) continue;
-                            holidayName = rule.name;
+                            holidayTitle = rule.title;
                             break;
                         case 'Autumnal Equinox Day':
                             if (date !== autumnalEquinoxDate) continue;
-                            holidayName = rule.name;
+                            holidayTitle = rule.title;
                             break;
                     }
                 }
             }
-            if (holidayName) {
+            if (holidayTitle) {
                 const ymd = this.getYmd(d);
-                mainHolidayMap[ymd] = { date: this.getYmd(d), name: holidayName };
+                mainHolidayMap[ymd] = { date: this.getYmd(d), title: holidayTitle };
             }
             d.setTime(d.getTime() + 3600 * 24 * 1000);
         }
@@ -151,24 +211,24 @@ class CalendarJp {
                     if (rule.logic === 'Natinal Holiday') {
                         // その前日及び翌日が「国民の祝日」である日（「国民の祝日」でない日に限る。）は、休日とする。
                         if (prev_holiday != null && next_holiday != null) {
-                            mainHolidayMap[ymd] = { date: ymd, name: rule.name };
+                            mainHolidayMap[ymd] = { date: ymd, title: rule.title };
                         }
                     } else if (rule.logic === 'Holiday in lieu') {
                         // 2007年以前の振替休日のルール
                         // 国民の祝日の日曜日の翌日の月曜日
                         if (prev_holiday != null && wday == 1 /* Monday */) {
-                            mainHolidayMap[ymd] = { date: ymd, name: rule.name };
+                            mainHolidayMap[ymd] = { date: ymd, title: rule.title };
                         }
                     } else if (rule.logic === 'Holiday in lieu(2007)') {
                         // 2007年以降の振替休日のルール
                         // 「国民の祝日」が日曜日に当たるときは、その日後においてその日に最も近い「国民の祝日」でない日を休日とする。  
-                        if (prev_holiday != null && prev_holiday.name !== rule.name) {
+                        if (prev_holiday != null && prev_holiday.title !== rule.title) {
                             let tmp_date = new Date(prev_date.getTime());
                             let tmp_wday = tmp_date.getDay();
                             let tmp_holiday = prev_holiday;
                             while (tmp_holiday != null) {
                                 if (tmp_wday === 0 /* Sunday */) {
-                                    mainHolidayMap[ymd] = { date: ymd, name: rule.name };
+                                    mainHolidayMap[ymd] = { date: ymd, title: rule.title };
                                     break;
                                 }
                                 tmp_date = new Date(tmp_date.getTime() - 3600 * 24 * 1000);
@@ -183,7 +243,7 @@ class CalendarJp {
         }
         // 祝日マップを作成する（yyyy-MM-dd => 祝日名）
         return Object.values(mainHolidayMap).reduce<Record<string, string>>((acc, holiday) => {
-            acc[holiday.date] = holiday.name;
+            acc[holiday.date] = holiday.title;
             return acc;
         }, {});
     }
@@ -259,6 +319,55 @@ class CalendarJp {
         return -1;
     }
 
+    /**
+     * 祝日ルールを検証する
+     * @param rule 祝日ルール
+     */
+    private validateRule(rule: HolidayRule): void {
+        if (!rule.name) {
+            throw new Error('Rule name is required');
+        }
+        if (!rule.title) {
+            throw new Error('Rule title is required');
+        }
+        if (!rule.yearRange) {
+            throw new Error('Rule yearRange is required');
+        }
+        if (!rule.yearRange.begin) {
+            throw new Error('Rule yearRange.begin is required');
+        }
+        if (!rule.yearRange.end) {
+            throw new Error('Rule yearRange.end is required');
+        }
+        if (rule.yearRange.begin > rule.yearRange.end) {
+            throw new Error('Rule yearRange.begin must be less than or equal to yearRange.end');
+        }
+        if (rule.month && (rule.month < 1 || rule.month > 12)) {
+            throw new Error('Rule month must be between 1 and 12');
+        }
+        if (rule.date && (rule.date < 1 || rule.date > 31)) {
+            throw new Error('Rule date must be between 1 and 31');
+        }
+        if (rule.dateRange && !rule.dateRange.begin) {
+            throw new Error('Rule dateRange.begin is required');
+        }
+        if (rule.dateRange && !rule.dateRange.end) {
+            throw new Error('Rule dateRange.end is required');
+        }
+        if (rule.dateRange && rule.dateRange.begin > rule.dateRange.end) {
+            throw new Error('Rule dateRange.begin must be less than or equal to dateRange.end');
+        }
+        if (rule.weekday && !this.weekdays.includes(rule.weekday as typeof this.weekdays[number])) {
+            throw new Error('Rule weekday must be one of the following: ' + this.weekdays.join(', '));
+        }
+        if (rule.date && rule.weekday) {
+            throw new Error('Rule date and weekday cannot be specified together');
+        }
+        if (rule.logic && !['Vernal Equinox Day', 'Autumnal Equinox Day', 'Natinal Holiday', 'Holiday in lieu', 'Holiday in lieu(2007)'].includes(rule.logic)) {
+            throw new Error('Rule logic must be one of the following: ' + ['Vernal Equinox Day', 'Autumnal Equinox Day', 'Natinal Holiday', 'Holiday in lieu', 'Holiday in lieu(2007)'].join(', '));
+        }
+    }
 }
 
 export default CalendarJp;
+export type { HolidayRule };
